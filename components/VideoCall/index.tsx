@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
 import {
-  useRTCClient,
   useJoin,
   useLocalCameraTrack,
   useLocalMicrophoneTrack,
@@ -15,9 +14,6 @@ import {
 const VideoCall = ({ setVideoCall }: { setVideoCall: (value: boolean) => void }) => {
   const [username, setUsername] = useState('')
   const [channelName, setChannelName] = useState('test')
-
-  // Initialize Agora RTC Client
-  const client = useRTCClient()
 
   // Join the channel
   useJoin({
