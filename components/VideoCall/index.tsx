@@ -12,6 +12,11 @@ import {
 } from 'agora-rtc-react'
 
 const VideoCall = ({ setVideoCall }: { setVideoCall: (value: boolean) => void }) => {
+  // Add check for window object
+  if (typeof window === 'undefined') {
+    return null
+  }
+
   const [username, setUsername] = useState('')
   const [channelName, setChannelName] = useState('test')
 

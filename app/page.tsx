@@ -1,7 +1,13 @@
 'use client'
 import { useState } from 'react'
-import VideoCall from '../components/VideoCall'
+import dynamic from 'next/dynamic'
 import AgoraRTC, { AgoraRTCProvider } from 'agora-rtc-react'
+
+// Dynamically import VideoCall component with SSR disabled
+const VideoCall = dynamic(
+  () => import('../components/VideoCall'),
+  { ssr: false }
+)
 
 // Initialize client
 const rtcClient = AgoraRTC.createClient({ codec: 'vp8', mode: 'rtc' })
