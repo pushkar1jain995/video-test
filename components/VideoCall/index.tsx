@@ -12,45 +12,67 @@ import {
 } from 'agora-rtc-react'
 
 const VideoCall = ({ setVideoCall }: { setVideoCall: (value: boolean) => void }) => {
-  // Add check for window object
-  if (typeof window === 'undefined') {
-    return null
-  }
+  if (typeof window === 'undefined') return null
 
   const [username, setUsername] = useState('')
   const [channelName, setChannelName] = useState('test')
+  const [hasPermissions, setHasPermissions] = useState(false)
 
-  // Join the channel
-  useJoin({
+  // Request permissions first
+  useEffect(() => {
+    const requestPermissions = async () => {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        setHasPermissions(true)
+      } catch (err) {
+        console.error('Error getting permissions:', err)
+        alert('Please allow camera and microphone access to use this app')
+      }
+    }
+    requestPermissions()
+  }, [])
+
+  // Only proceed with join and tracks if we have permissions
+  const { isConnected } = useJoin({
     appid: process.env.NEXT_PUBLIC_AGORA_APP_ID!,
     channel: channelName,
-    token: null, // Add your token here if required
+    token: null,
   })
 
-  // Local media tracks
-  const { localCameraTrack } = useLocalCameraTrack()
-  const { localMicrophoneTrack } = useLocalMicrophoneTrack()
+  const { localCameraTrack, error: cameraError } = useLocalCameraTrack(hasPermissions)
+  const { localMicrophoneTrack, error: micError } = useLocalMicrophoneTrack(hasPermissions)
 
-  // Publish local tracks
-  usePublish([localCameraTrack, localMicrophoneTrack])
+  // Only publish tracks if we're connected and have tracks
+  usePublish(
+    [localCameraTrack, localMicrophoneTrack].filter(Boolean)
+  )
 
-  // Remote users
   const remoteUsers = useRemoteUsers()
   const { audioTracks } = useRemoteAudioTracks(remoteUsers)
 
-  // Play remote audio tracks
-  audioTracks.forEach((track) => track.play())
+  useEffect(() => {
+    if (audioTracks.length > 0) {
+      audioTracks.forEach((track) => track.play())
+    }
+  }, [audioTracks])
 
-  // Set username on component mount
   useEffect(() => {
     setUsername(prompt('Enter your name') || 'User')
   }, [])
 
-  // End call handler
   const endCall = () => {
-    setVideoCall(false)
     localCameraTrack?.close()
     localMicrophoneTrack?.close()
+    setVideoCall(false)
+  }
+
+  if (cameraError || micError) {
+    return (
+      <div>
+        <p>Error accessing media devices. Please check permissions.</p>
+        <button onClick={endCall}>Leave</button>
+      </div>
+    )
   }
 
   return (
