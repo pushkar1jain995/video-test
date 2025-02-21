@@ -10,6 +10,7 @@ import {
   RemoteUser,
   LocalVideoTrack,
 } from 'agora-rtc-react'
+import JoinForm from '../JoinForm'
 
 const VideoCall = ({ setVideoCall }: { setVideoCall: (value: boolean) => void }) => {
   if (typeof window === 'undefined') return null
@@ -17,6 +18,7 @@ const VideoCall = ({ setVideoCall }: { setVideoCall: (value: boolean) => void })
   const [username, setUsername] = useState('')
   const [channelName, setChannelName] = useState('test')
   const [hasPermissions, setHasPermissions] = useState(false)
+  const [isJoined, setIsJoined] = useState(false)
 
   // Request permissions first
   useEffect(() => {
@@ -32,12 +34,13 @@ const VideoCall = ({ setVideoCall }: { setVideoCall: (value: boolean) => void })
     requestPermissions()
   }, [])
 
-  // Only proceed with join and tracks if we have permissions
+  // Only proceed with join and tracks if we have permissions and username
   const { isConnected } = useJoin({
     appid: process.env.NEXT_PUBLIC_AGORA_APP_ID!,
     channel: channelName,
     token: null,
-  })
+    uid: Math.floor(Math.random() * 1000000),
+  }, isJoined)
 
   const { localCameraTrack, error: cameraError } = useLocalCameraTrack(hasPermissions)
   const { localMicrophoneTrack, error: micError } = useLocalMicrophoneTrack(hasPermissions)
@@ -56,9 +59,12 @@ const VideoCall = ({ setVideoCall }: { setVideoCall: (value: boolean) => void })
     }
   }, [audioTracks])
 
-  useEffect(() => {
-    setUsername(prompt('Enter your name') || 'User')
-  }, [])
+  if (!isJoined) {
+    return <JoinForm onJoin={(name) => {
+      setUsername(name)
+      setIsJoined(true)
+    }} />
+  }
 
   const endCall = () => {
     localCameraTrack?.close()
