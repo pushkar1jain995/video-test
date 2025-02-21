@@ -1,7 +1,12 @@
 'use client'
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
-import AgoraRTC, { AgoraRTCProvider } from 'agora-rtc-react'
+
+// Dynamically import the AgoraRTCProvider wrapper
+const AgoraWrapper = dynamic(
+  () => import('../components/AgoraWrapper'),
+  { ssr: false }
+)
 
 // Dynamically import VideoCall component with SSR disabled
 const VideoCall = dynamic(
@@ -9,14 +14,11 @@ const VideoCall = dynamic(
   { ssr: false }
 )
 
-// Initialize client
-const rtcClient = AgoraRTC.createClient({ codec: 'vp8', mode: 'rtc' })
-
 export default function Home() {
   const [videoCall, setVideoCall] = useState(true)
 
   return (
-    <AgoraRTCProvider client={rtcClient}>
+    <AgoraWrapper>
       <div>
         {videoCall ? (
           <VideoCall setVideoCall={setVideoCall} />
@@ -24,6 +26,6 @@ export default function Home() {
           <button onClick={() => setVideoCall(true)}>Join Call</button>
         )}
       </div>
-    </AgoraRTCProvider>
+    </AgoraWrapper>
   )
 }
